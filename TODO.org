@@ -1,0 +1,7 @@
+
+* Options to add costs to separate operations in the different distances
+* TST to search
+* Phonetic algorithms
+** Soundex
+** Metaphone, double metaphone
+** Caverphone
