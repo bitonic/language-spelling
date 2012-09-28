@@ -1,4 +1,4 @@
-module Data.TST.Set
+module Data.TSTSet
     ( TSTSet
     , empty
     , singleton
