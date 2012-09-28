@@ -36,11 +36,11 @@ Library
                       EmptyDataDecls
 
     Exposed-Modules:  Language.Distance,
+                      Language.Distance.Internal,
                       Language.Distance.Search,
                       Language.Distance.Search.BK,
                       Language.Distance.Search.TST,
                       Data.TST,
                       Data.TSTSet
 
-    Other-Modules:    Language.Distance.Internal,
-                      Language.Distance.Search.Class
+    Other-Modules:    Language.Distance.Search.Class
