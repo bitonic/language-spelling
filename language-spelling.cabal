@@ -23,8 +23,6 @@ Library
     Build-Depends:    base >= 3 && < 5,
                       ListLike,
                       vector >= 0.5,
-                      unordered-containers >= 0.1.3,
-                      hashable,
                       containers,
                       deepseq,
                       bytestring

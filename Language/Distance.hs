@@ -16,8 +16,7 @@ import           Data.Monoid ((<>))
 import           Prelude hiding ((!!))
 
 import           Data.ByteString (ByteString)
-import qualified Data.HashMap.Strict as HashMap
-import           Data.Hashable (Hashable)
+import qualified Data.Map.Lazy as Map
 import           Data.ListLike (ListLike)
 import qualified Data.ListLike as ListLike
 import           Data.Vector.Unboxed.Mutable (STVector, Unbox)
@@ -59,7 +58,7 @@ instance Eq sym => EditDistance Levenshtein sym where
 
 data DamerauLevenshtein
 
-instance (Eq sym, Hashable sym) => EditDistance DamerauLevenshtein sym where
+instance (Eq sym, Ord sym) => EditDistance DamerauLevenshtein sym where
     distance s1 s2
         | ListLike.null s1 = Distance (ListLike.length s2)
         | ListLike.null s2 = Distance (ListLike.length s1)
@@ -76,13 +75,13 @@ instance (Eq sym, Hashable sym) => EditDistance DamerauLevenshtein sym where
         len1 = ListLike.length s1
         len2 = ListLike.length s2
         ix r c = r * (len2 + 2) + c
-        chPos' = ListLike.foldr (\ch -> HashMap.insert ch 0) HashMap.empty (s1 <> s2)
+        chPos' = ListLike.foldr (\ch -> Map.insert ch 0) Map.empty (s1 <> s2)
         go1 v chPos r = do foldM_ (go2 v chPos r) 0 [1..len2]
-                           return (HashMap.insert (s1 !! (r - 1)) r chPos)
+                           return (Map.insert (s1 !! (r - 1)) r chPos)
         go2 v chPos r db c =
             let ch1 = s1 !! (r - 1)
                 ch2 = s2 !! (c - 1)
-                r1 = chPos HashMap.! ch2
+                r1 = chPos Map.! ch2
                 c1 = db
             in do d1 <- Vector.read v (ix r c)
                   (d2, db') <- if ch1 == ch2 then return (d1, c)
