@@ -49,6 +49,7 @@ instance Eq sym => EditDistance Levenshtein sym where
                          d3 <- (if s1 !! (r - 1) == s2 !! (c - 1) then id else (+1))
                                <$> Vector.read v (ix (r - 1) (c - 1))
                          Vector.write v (ix r c) (min3 d1 d2 d3)
+    {-# SPECIALISE distance :: String -> String -> Distance Levenshtein #-}
 
 -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --
 -- ~~ Damerau-Levenshtein ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --
@@ -90,6 +91,7 @@ instance (Eq sym, Hashable sym) => EditDistance DamerauLevenshtein sym where
                         Vector.read v (ix r1 c1)
                   Vector.write v (ix (r + 1) (c + 1)) (min d2 d5)
                   return db'
+    {-# SPECIALISE distance :: String -> String -> Distance DamerauLevenshtein #-}
 
 -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --
 -- ~~ Hamming ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --

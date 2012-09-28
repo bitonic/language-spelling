@@ -1,5 +1,4 @@
 {-# LANGUAGE FlexibleContexts #-}
-module Bench (main) where
 import Control.Applicative ((<$>))
 
 import           Data.Char (toLower)
@@ -51,7 +50,7 @@ insertTSTLev = insert
 main :: IO ()
 main = do ss <- dict
           let config = defaultConfig { cfgReport  = (Last (Just "report.html"))
-                                     , cfgSamples = (Last (Just 100))
+                                     , cfgSamples = (Last (Just 20))
                                      }
           defaultMainWith config (return ())
               [ bgroup "rand" [ bench "shuffle" $ nfIO (shuffleM ss)]

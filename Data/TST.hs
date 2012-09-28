@@ -23,8 +23,8 @@ import            Prelude hiding (lookup)
 -- ~~ TST ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --
 -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --
 
-data TST sym v = Branch sym (TST sym v) (TST sym v) (TST sym v)
-               | End v (TST sym v)
+data TST sym v = Branch !sym !(TST sym v) !(TST sym v) !(TST sym v)
+               | End v !(TST sym v)
                | Null
 
 instance (Ord sym, Eq v) => Eq (TST sym v) where

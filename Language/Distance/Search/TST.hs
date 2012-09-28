@@ -56,17 +56,25 @@ instance NFData sym => NFData (TSTDist full sym algo) where
 instance (Ord sym, Show sym) => Search TSTDist sym Levenshtein where
     empty     = TSTDist TSTSet.empty
     insert ll = TSTDist . TSTSet.insert (ListLike.toList ll) . getTST
+    {-# SPECIALISE insert :: String -> TSTDist String Char Levenshtein
+                          -> TSTDist String Char Levenshtein #-}
     query     = queryTST (\s -> deletions s ++ replaces s ++ insertions s)
+    {-# SPECIALISE query :: Int -> String -> TSTDist String Char Levenshtein
+                         -> [(String, Distance Levenshtein)] #-}
+
 
 instance (Ord sym, Show sym) => Search TSTDist sym DamerauLevenshtein where
     empty     = TSTDist TSTSet.empty
     insert ll = TSTDist . TSTSet.insert (ListLike.toList ll) . getTST
+    {-# SPECIALISE insert :: String -> TSTDist String Char DamerauLevenshtein
+                          -> TSTDist String Char DamerauLevenshtein #-}
     query     = queryTST (\s -> deletions s ++ replaces s ++ insertions s ++
                                 transpositions s)
-
+    {-# SPECIALISE query :: Int -> String -> TSTDist String Char DamerauLevenshtein
+                         -> [(String, Distance DamerauLevenshtein)] #-}
 
 queryTST :: (Ord sym, ListLike full sym, Show sym)
-         => ([WildCard sym] -> [[WildCard sym]])
+         => (WildList sym -> [WildList sym])
          -> Int -> full -> TSTDist full sym algo -> [(full, Distance algo)]
 queryTST f maxd s (TSTDist tst) =
     map (first ListLike.fromList) $ TST.toList $
@@ -81,6 +89,13 @@ queryTST f maxd s (TSTDist tst) =
         | otherwise = matches
 
     update new matches = foldr (uncurry (TST.insertWith (flip const))) matches new
+{-# SPECIALISE queryTST :: (WildList Char -> [WildList Char])
+                        -> Int -> String -> TSTDist String Char Levenshtein
+                        -> [(String, Distance Levenshtein)] #-}
+{-# SPECIALISE queryTST :: (WildList Char -> [WildList Char])
+                        -> Int -> String -> TSTDist String Char DamerauLevenshtein
+                        -> [(String, Distance DamerauLevenshtein)] #-}
+
 
 wildList :: ListLike full sym => full -> WildList sym
 wildList = map El . ListLike.toList
