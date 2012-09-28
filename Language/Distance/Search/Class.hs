@@ -1,3 +1,4 @@
+{-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 module Language.Distance.Search.Class (Search (..)) where
 
@@ -20,4 +21,8 @@ class Search container sym algo where
     member :: (EditDistance algo sym, ListLike full sym)
            => full -> container full sym algo -> Bool
     member x = not . null . query 0 x
+
+    fromList :: (EditDistance algo sym, ListLike full sym)
+             => [full] -> container full sym algo
+    fromList = foldr insert empty
 

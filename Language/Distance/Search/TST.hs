@@ -1,7 +1,9 @@
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 module Language.Distance.Search.TST
     ( TSTDist
+    , changeAlgo
     , deletions
     , transpositions
     , replaces
@@ -55,7 +57,10 @@ newtype TSTDist full sym algo = TSTDist {getTST :: TSTSet sym}
 instance NFData sym => NFData (TSTDist full sym algo) where
     rnf = rnf . getTST
 
-instance (Ord sym, Show sym) => Search TSTDist sym Levenshtein where
+changeAlgo :: TSTDist full sym algo1 -> TSTDist full sym algo1
+changeAlgo (TSTDist tst) = TSTDist tst
+
+instance Ord sym => Search TSTDist sym Levenshtein where
     empty     = TSTDist TSTSet.empty
     insert ll = TSTDist . TSTSet.insert (ListLike.toList ll) . getTST
     {-# SPECIALISE insert :: String -> TSTDist String Char Levenshtein
@@ -69,7 +74,7 @@ instance (Ord sym, Show sym) => Search TSTDist sym Levenshtein where
                          -> [(ByteString, Distance Levenshtein)] #-}
 
 
-instance (Ord sym, Show sym) => Search TSTDist sym DamerauLevenshtein where
+instance Ord sym => Search TSTDist sym DamerauLevenshtein where
     empty     = TSTDist TSTSet.empty
     insert ll = TSTDist . TSTSet.insert (ListLike.toList ll) . getTST
     {-# SPECIALISE insert :: String -> TSTDist String Char DamerauLevenshtein
@@ -83,7 +88,7 @@ instance (Ord sym, Show sym) => Search TSTDist sym DamerauLevenshtein where
     {-# SPECIALISE query :: Int -> ByteString -> TSTDist ByteString Word8 DamerauLevenshtein
                          -> [(ByteString, Distance DamerauLevenshtein)] #-}
 
-queryTST :: (Ord sym, ListLike full sym, Show sym)
+queryTST :: (Ord sym, ListLike full sym)
          => (WildList sym -> [WildList sym])
          -> Int -> full -> TSTDist full sym algo -> [(full, Distance algo)]
 queryTST f maxd s (TSTDist tst) =
