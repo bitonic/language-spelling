@@ -3,8 +3,8 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Language.Distance.Search.BK (BKTree) where
 
-import           Data.IntMap.Lazy (IntMap)
-import qualified Data.IntMap.Lazy as IntMap
+import           Data.IntMap (IntMap)
+import qualified Data.IntMap as IntMap
 
 import           Data.ListLike (ListLike)
 

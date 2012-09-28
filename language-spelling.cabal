@@ -28,10 +28,12 @@ Library
                       containers
 
     GHC-Options:      -Werror -O2
+
     Extensions:       MultiParamTypeClasses,
                       FlexibleInstances,
                       ForeignFunctionInterface,
-                      ScopedTypeVariables
+                      ScopedTypeVariables,
+                      EmptyDataDecls
 
     Exposed-Modules:  Language.Distance,
                       Language.Distance.Search,
