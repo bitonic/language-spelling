@@ -4,9 +4,12 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Language.Distance.Search.BK (BKTree) where
 
+import           Data.Word (Word8)
+
 import           Control.DeepSeq
 import           Data.IntMap (IntMap)
 import qualified Data.IntMap as IntMap
+import           Data.ByteString (ByteString)
 
 import           Data.ListLike (ListLike)
 
@@ -30,6 +33,11 @@ instance Eq sym => Search BKTree sym algo where
                           -> BKTree String Char Levenshtein #-}
     {-# SPECIALISE insert :: String -> BKTree String Char DamerauLevenshtein
                           -> BKTree String Char DamerauLevenshtein #-}
+    {-# SPECIALISE insert :: ByteString -> BKTree ByteString Word8 Levenshtein
+                          -> BKTree ByteString Word8 Levenshtein #-}
+    {-# SPECIALISE insert :: ByteString -> BKTree ByteString Word8 DamerauLevenshtein
+                          -> BKTree ByteString Word8 DamerauLevenshtein #-}
+
 
     query _    _    EmptyBK          = []
     query maxd str (BKTree str' bks) = match ++ concatMap (query maxd str) children
@@ -42,6 +50,10 @@ instance Eq sym => Search BKTree sym algo where
                          -> [(String, Distance Levenshtein)] #-}
     {-# SPECIALISE query :: Int -> String -> BKTree String Char DamerauLevenshtein
                          -> [(String, Distance DamerauLevenshtein)] #-}
+    {-# SPECIALISE query :: Int -> ByteString -> BKTree ByteString Word8 Levenshtein
+                         -> [(ByteString, Distance Levenshtein)] #-}
+    {-# SPECIALISE query :: Int -> ByteString -> BKTree ByteString Word8 DamerauLevenshtein
+                         -> [(ByteString, Distance DamerauLevenshtein)] #-}
 
 
 insertBK :: forall full sym algo. (Eq sym, EditDistance algo sym, ListLike full sym)

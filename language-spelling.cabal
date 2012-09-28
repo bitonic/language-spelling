@@ -26,7 +26,8 @@ Library
                       unordered-containers >= 0.1.3,
                       hashable,
                       containers,
-                      deepseq
+                      deepseq,
+                      bytestring
 
     GHC-Options:      -Werror -O2
 
@@ -51,4 +52,5 @@ Test-Suite benchmarks
     main-is:          bench.hs
     build-depends:    base,
                       criterion,
-                      random-shuffle
+                      random-shuffle,
+                      bytestring >= 0.10  

@@ -15,6 +15,7 @@ import           Control.Monad.ST (runST, ST)
 import           Data.Monoid ((<>))
 import           Prelude hiding ((!!))
 
+import           Data.ByteString (ByteString)
 import qualified Data.HashMap.Strict as HashMap
 import           Data.Hashable (Hashable)
 import           Data.ListLike (ListLike)
@@ -50,6 +51,7 @@ instance Eq sym => EditDistance Levenshtein sym where
                                <$> Vector.read v (ix (r - 1) (c - 1))
                          Vector.write v (ix r c) (min3 d1 d2 d3)
     {-# SPECIALISE distance :: String -> String -> Distance Levenshtein #-}
+    {-# SPECIALISE distance :: ByteString -> ByteString -> Distance Levenshtein #-}
 
 -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --
 -- ~~ Damerau-Levenshtein ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --
@@ -92,6 +94,7 @@ instance (Eq sym, Hashable sym) => EditDistance DamerauLevenshtein sym where
                   Vector.write v (ix (r + 1) (c + 1)) (min d2 d5)
                   return db'
     {-# SPECIALISE distance :: String -> String -> Distance DamerauLevenshtein #-}
+    {-# SPECIALISE distance :: ByteString -> ByteString -> Distance DamerauLevenshtein #-}
 
 -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --
 -- ~~ Hamming ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --
