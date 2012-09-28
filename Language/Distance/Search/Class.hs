@@ -17,3 +17,7 @@ class Search container sym algo where
               => full -> container full sym algo
     singleton str = insert str empty
 
+    member :: (EditDistance algo sym, ListLike full sym)
+           => full -> container full sym algo -> Bool
+    member x = not . null . query 0 x
+

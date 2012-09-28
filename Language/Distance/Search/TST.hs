@@ -1,40 +1,48 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-module Language.Distance.Search.TST (TSTDist) where
+module Language.Distance.Search.TST
+    ( TSTDist
+    , deletions
+    , transpositions
+    , replaces
+    , insertions
+    ) where
 
 import           Control.Arrow (first)
 
+import           Control.DeepSeq
+
 import           Data.ListLike (ListLike)
 import qualified Data.ListLike as ListLike
-
-import           Language.Distance
-import           Language.Distance.Internal
-import           Language.Distance.Search.Class (Search)
-import qualified Language.Distance.Search.Class as Class
 
 import           Data.TST (WildCard (..), WildList)
 import qualified Data.TST as TST
 import           Data.TSTSet (TSTSet)
 import qualified Data.TSTSet as TSTSet
+import           Language.Distance
+import           Language.Distance.Internal
+import           Language.Distance.Search.Class (Search)
+import qualified Language.Distance.Search.Class as Class
 
 -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --
 -- ~~ Edits ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --
 -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --
 
-deleted, transposes, replaces, inserts :: WildList a -> [WildList a]
+deletions, transpositions :: [a] -> [[a]]
+replaces, insertions :: WildList a -> [WildList a]
 
-deleted []      = []
-deleted (c : s) = s : map (c :) (deleted s)
+deletions []      = []
+deletions (c : s) = s : map (c :) (deletions s)
 
-transposes []  = []
-transposes [x] = [[x]]
-transposes (x : y : s) = (y : x : s) : map (x :) (transposes (y : s))
+transpositions []  = []
+transpositions [x] = [[x]]
+transpositions (x : y : s) = (y : x : s) : map (x :) (transpositions (y : s))
 
 replaces [] = []
 replaces (c : s) = (WildCard : s) : map (c :) (replaces s)
 
-inserts [] = [[WildCard]]
-inserts (c : s) = (WildCard : c : s) : map (c :) (inserts s)
+insertions [] = [[WildCard]]
+insertions (c : s) = (WildCard : c : s) : map (c :) (insertions s)
 
 -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --
 -- ~~ TST Search ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --
@@ -42,15 +50,20 @@ inserts (c : s) = (WildCard : c : s) : map (c :) (inserts s)
 
 newtype TSTDist full sym algo = TSTDist {getTST :: TSTSet sym}
 
+instance NFData sym => NFData (TSTDist full sym algo) where
+    rnf = rnf . getTST
+
 instance (Ord sym, Show sym) => Search TSTDist sym Levenshtein where
     empty     = TSTDist TSTSet.empty
     insert ll = TSTDist . TSTSet.insert (ListLike.toList ll) . getTST
-    query     = queryTST (\s -> deleted s ++ replaces s ++ inserts s)
+    query     = queryTST (\s -> deletions s ++ replaces s ++ insertions s)
 
 instance (Ord sym, Show sym) => Search TSTDist sym DamerauLevenshtein where
     empty     = TSTDist TSTSet.empty
     insert ll = TSTDist . TSTSet.insert (ListLike.toList ll) . getTST
-    query     = queryTST (\s -> deleted s ++ replaces s ++ inserts s ++ transposes s)
+    query     = queryTST (\s -> deletions s ++ replaces s ++ insertions s ++
+                                transpositions s)
+
 
 queryTST :: (Ord sym, ListLike full sym, Show sym)
          => ([WildCard sym] -> [[WildCard sym]])

@@ -3,6 +3,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Language.Distance.Search.BK (BKTree) where
 
+import           Control.DeepSeq
 import           Data.IntMap (IntMap)
 import qualified Data.IntMap as IntMap
 
@@ -12,6 +13,10 @@ import           Language.Distance
 import           Language.Distance.Search.Class
 
 data BKTree full sym algo = EmptyBK | BKTree full (IntMap (BKTree full sym algo))
+
+instance NFData full => NFData (BKTree full sym algo) where
+    rnf EmptyBK       = ()
+    rnf (BKTree s im) = rnf s `seq` rnf im
 
 narrow :: IntMap.Key -> IntMap.Key -> IntMap a -> IntMap a
 narrow n m im = fst (IntMap.split m (snd (IntMap.split n im)))
