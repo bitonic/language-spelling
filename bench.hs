@@ -55,6 +55,14 @@ group1 _ ss rand1ss rand2ss name =
       nf (query 0 rand2ss :: container full sym algo -> ()) dist
     , bench ("lookup rand " ++ name) $
       nf (query 0 rand2ss :: container full sym algo -> ()) distRand
+    , bench ("query 1 " ++ name) $
+      nf (query 1 (take 100 rand2ss) :: container full sym algo -> ()) dist
+    , bench ("query 1 rand " ++ name) $
+      nf (query 1 (take 100 rand2ss) :: container full sym algo -> ()) distRand
+    , bench ("query 2 " ++ name) $
+      nf (query 2 (take 10 rand2ss) :: container full sym algo -> ()) dist
+    , bench ("query 2 rand " ++ name) $
+      nf (query 2 (take 10 rand2ss) :: container full sym algo -> ()) distRand
     ]
   where
     dist     = Dist.fromList ss
