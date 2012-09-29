@@ -60,7 +60,8 @@ instance NFData sym => NFData (TSTDist full sym algo) where
 changeAlgo :: TSTDist full sym algo1 -> TSTDist full sym algo1
 changeAlgo (TSTDist tst) = TSTDist tst
 
-instance Ord sym => Search TSTDist sym Levenshtein where
+instance (Ord sym, ListLike full sym, EditDistance Levenshtein sym)
+         => Search (TSTDist full sym Levenshtein) full Levenshtein where
     empty     = TSTDist TSTSet.empty
     insert ll = TSTDist . TSTSet.insert (ListLike.toList ll) . getTST
     {-# SPECIALISE insert :: String -> TSTDist String Char Levenshtein
@@ -74,7 +75,8 @@ instance Ord sym => Search TSTDist sym Levenshtein where
                          -> [(ByteString, Distance Levenshtein)] #-}
 
 
-instance Ord sym => Search TSTDist sym DamerauLevenshtein where
+instance (Ord sym, ListLike full sym, EditDistance DamerauLevenshtein sym)
+         => Search (TSTDist full sym DamerauLevenshtein) full DamerauLevenshtein where
     empty     = TSTDist TSTSet.empty
     insert ll = TSTDist . TSTSet.insert (ListLike.toList ll) . getTST
     {-# SPECIALISE insert :: String -> TSTDist String Char DamerauLevenshtein

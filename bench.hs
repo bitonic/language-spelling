@@ -9,10 +9,10 @@ import           Data.Word (Word8)
 import           Control.DeepSeq
 import           Data.ByteString.Char8 (ByteString)
 import qualified Data.ByteString.Char8 as BS
+import           Data.Time (getCurrentTime)
 
 import           Criterion.Main
 import           Criterion.Config
-import           Data.ListLike (ListLike)
 import           System.Random.Shuffle
 
 import           Language.Distance
@@ -30,57 +30,51 @@ dict = (map (map toLower)) . everyN 20 . lines <$> readFile "/usr/share/dict/wor
 dictBS :: IO [ByteString]
 dictBS = (map (BS.map toLower)) . everyN 20 . BS.lines <$> BS.readFile "/usr/share/dict/words"
 
-insert :: (ListLike full sym, EditDistance algo sym, Search container sym algo)
-       => [full] -> container full sym algo
+insert :: Search container full algo => [full] -> container
 insert ss = foldr Dist.insert Dist.empty ss
 
-query :: (ListLike full sym, EditDistance algo sym, Search container sym algo)
-      => Int -> [full] -> container full sym algo -> ()
+query :: (Search container full algo) => Int -> [full] -> container -> ()
 query n ss dist = length [() | s <- ss, length (Dist.query n s dist) > 0] `seq` ()
 
-group1 :: forall container full sym algo.
-          ( NFData (container full sym algo)
-          , ListLike full sym
-          , EditDistance algo sym
-          , Search container sym algo
-          ) => container full sym algo
-            -> [full] -> [full] -> [full] -> String -> [Benchmark]
+group1 :: forall container full algo. (NFData container, Search container full algo)
+       => container -> [full] -> [full] -> [full] -> String -> [Benchmark]
 group1 _ ss rand1ss rand2ss name =
     dist `deepseq` distRand `deepseq`
     [ bench ("insert " ++ name) $
-      nf (insert :: [full] -> container full sym algo) ss
+      nf (insert :: [full] -> container) ss
     , bench ("insert rand " ++ name) $
-      nf (insert :: [full] -> container full sym algo) rand1ss
+      nf (insert :: [full] -> container) rand1ss
     , bench ("lookup " ++ name) $
-      nf (query 0 rand2ss :: container full sym algo -> ()) dist
+      nf (query 0 rand2ss :: container -> ()) dist
     , bench ("lookup rand " ++ name) $
-      nf (query 0 rand2ss :: container full sym algo -> ()) distRand
+      nf (query 0 rand2ss :: container -> ()) distRand
     , bench ("query 1 " ++ name) $
-      nf (query 1 (take 100 rand2ss) :: container full sym algo -> ()) dist
+      nf (query 1 (take 100 rand2ss) :: container -> ()) dist
     , bench ("query 1 rand " ++ name) $
-      nf (query 1 (take 100 rand2ss) :: container full sym algo -> ()) distRand
+      nf (query 1 (take 100 rand2ss) :: container -> ()) distRand
     , bench ("query 2 " ++ name) $
-      nf (query 2 (take 10 rand2ss) :: container full sym algo -> ()) dist
+      nf (query 2 (take 100 rand2ss) :: container -> ()) dist
     , bench ("query 2 rand " ++ name) $
-      nf (query 2 (take 10 rand2ss) :: container full sym algo -> ()) distRand
+      nf (query 2 (take 100 rand2ss) :: container -> ()) distRand
     ]
   where
     dist     = Dist.fromList ss
     distRand = Dist.fromList rand1ss
 
-group2 :: forall container.
-          ( NFData (container String Char Levenshtein)
-          , NFData (container ByteString Word8 Levenshtein)
-          , NFData (container String Char DamerauLevenshtein)
-          , NFData (container ByteString Word8 DamerauLevenshtein)
-          , Search container Char Levenshtein
-          , Search container Word8 Levenshtein
-          , Search container Char DamerauLevenshtein
-          , Search container Word8 DamerauLevenshtein
-          ) => container String Char Levenshtein
-            -> [String] -> [String] -> [String]
-            -> [ByteString] -> [ByteString] -> [ByteString]
-            -> String -> [Benchmark]
+-- yuk
+group2
+    :: forall container full sym algo.
+       ( NFData (container String Char Levenshtein)
+       , NFData (container ByteString Word8 Levenshtein)
+       , NFData (container String Char DamerauLevenshtein)
+       , NFData (container ByteString Word8 DamerauLevenshtein)
+       , Search (container String Char Levenshtein) String Levenshtein
+       , Search (container ByteString Word8 Levenshtein) ByteString Levenshtein
+       , Search (container String Char DamerauLevenshtein) String DamerauLevenshtein
+       , Search (container ByteString Word8 DamerauLevenshtein) ByteString DamerauLevenshtein
+       ) => container full sym algo -> [String] -> [String] -> [String]
+         -> [ByteString] -> [ByteString] -> [ByteString]
+         -> String -> [Benchmark]
 group2 _ ss rand1ss rand2ss bss rand1bss rand2bss name =
     [ bgroup (name ++ " string") $
       (group1 (undefined :: container String Char Levenshtein)
@@ -101,7 +95,8 @@ main = do ss       <- dict
           bss      <- dictBS
           rand1bss <- shuffleM bss
           rand2bss <- shuffleM bss
-          let config = defaultConfig { cfgReport  = (Last (Just "report.html"))
+          fn       <- (++ ".html") . concat . words . show <$> getCurrentTime
+          let config = defaultConfig { cfgReport  = (Last (Just fn))
                                      , cfgSamples = (Last (Just 100))
                                      }
           defaultMainWith config (return ())

@@ -26,7 +26,8 @@ instance NFData full => NFData (BKTree full sym algo) where
 narrow :: IntMap.Key -> IntMap.Key -> IntMap a -> IntMap a
 narrow n m im = fst (IntMap.split m (snd (IntMap.split n im)))
 
-instance Eq sym => Search BKTree sym algo where
+instance (Eq sym, ListLike full sym, EditDistance algo sym)
+         => Search (BKTree full sym algo) full algo where
     empty = EmptyBK
     insert = insertBK
     {-# SPECIALISE insert :: String -> BKTree String Char Levenshtein
