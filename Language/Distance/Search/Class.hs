@@ -2,8 +2,6 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 module Language.Distance.Search.Class (Search (..)) where
 
-import           Data.ListLike (ListLike)
-
 import           Language.Distance
 
 
