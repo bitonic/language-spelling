@@ -25,7 +25,8 @@ Library
                       vector >= 0.5,
                       containers,
                       deepseq,
-                      bytestring
+                      bytestring,
+                      array
 
     GHC-Options:      -Werror -O2
 
@@ -40,6 +41,10 @@ Library
                       Language.Distance.Search,
                       Language.Distance.Search.BK,
                       Language.Distance.Search.TST,
+                      Language.Phonetic,
+                      Language.Phonetic.Encoder,
+                      Language.Phonetic.Soundex,
+                      Language.Phonetic.Internal,
                       Data.TST,
                       Data.TSTSet
 
