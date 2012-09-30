@@ -12,8 +12,6 @@ module Data.TSTSet
 
 import           Prelude hiding (lookup)
 
-import           Control.DeepSeq
-
 import           Data.TST (TST, WildList)
 import qualified Data.TST as TST
 
@@ -24,9 +22,6 @@ instance Ord sym => Eq (TSTSet sym) where
 
 instance (Show sym, Ord sym) => Show (TSTSet sym) where
     show t1 = "fromList " ++ show (toList t1)
-
-instance NFData sym => NFData (TSTSet sym) where
-    rnf = rnf . unTSTSet
 
 empty :: Ord sym => TSTSet sym
 empty = TSTSet TST.empty

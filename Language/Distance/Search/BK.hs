@@ -6,7 +6,6 @@ module Language.Distance.Search.BK (BKTree) where
 
 import           Data.Word (Word8)
 
-import           Control.DeepSeq
 import           Data.IntMap (IntMap)
 import qualified Data.IntMap as IntMap
 import           Data.ByteString (ByteString)
@@ -19,14 +18,10 @@ import           Language.Distance.Search.Class
 data BKTree full sym algo = EmptyBK
                           | BKTree !full !(IntMap (BKTree full sym algo))
 
-instance NFData full => NFData (BKTree full sym algo) where
-    rnf EmptyBK       = ()
-    rnf (BKTree s im) = rnf s `seq` rnf im
-
 narrow :: IntMap.Key -> IntMap.Key -> IntMap a -> IntMap a
 narrow n m im = fst (IntMap.split m (snd (IntMap.split n im)))
 
-instance (Eq sym, ListLike full sym, EditDistance algo sym)
+instance (Eq sym, ListLike full sym, EditDistance sym algo)
          => Search (BKTree full sym algo) full algo where
     empty = EmptyBK
     insert = insertBK
@@ -57,7 +52,7 @@ instance (Eq sym, ListLike full sym, EditDistance algo sym)
                          -> [(ByteString, Distance DamerauLevenshtein)] #-}
 
 
-insertBK :: forall full sym algo. (Eq sym, EditDistance algo sym, ListLike full sym)
+insertBK :: forall full sym algo. (Eq sym, EditDistance sym algo, ListLike full sym)
          => full -> BKTree full sym algo -> BKTree full sym algo
 insertBK str EmptyBK = BKTree str IntMap.empty
 insertBK str bk@(BKTree str' bks)

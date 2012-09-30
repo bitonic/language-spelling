@@ -14,8 +14,6 @@ module Data.TST
     , matchWL
     ) where
 
-import            Control.DeepSeq
-
 import            Control.Arrow (first)
 import            Prelude hiding (lookup)
 
@@ -32,11 +30,6 @@ instance (Ord sym, Eq v) => Eq (TST sym v) where
 
 instance (Show sym, Ord sym, Show v) => Show (TST sym v) where
     show t1 = "fromList " ++ show (toList t1)
-
-instance (NFData sym, NFData v) => NFData (TST sym v) where
-    rnf Null             = ()
-    rnf (End v t)        = rnf v `seq` rnf t
-    rnf (Branch c l m r) = rnf c `seq` rnf l `seq` rnf m `seq` rnf r
 
 empty :: Ord sym => TST sym v
 empty = Null

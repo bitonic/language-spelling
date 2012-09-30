@@ -6,7 +6,6 @@ import           Data.Char (toLower)
 import           Data.Monoid (Last (..))
 import           Data.Word (Word8)
 
-import           Control.DeepSeq
 import           Data.ByteString.Char8 (ByteString)
 import qualified Data.ByteString.Char8 as BS
 import           Data.Time.Clock.POSIX (getPOSIXTime)
@@ -36,26 +35,26 @@ insert ss = foldr Dist.insert Dist.empty ss
 query :: (Search container full algo) => Int -> [full] -> container -> ()
 query n ss dist = length [() | s <- ss, length (Dist.query n s dist) > 0] `seq` ()
 
-group1 :: forall container full algo. (NFData container, Search container full algo)
+group1 :: forall container full algo. (Search container full algo)
        => container -> [full] -> [full] -> [full] -> String -> [Benchmark]
 group1 _ ss rand1ss rand2ss name =
-    dist `deepseq` distRand `deepseq`
+    dist `seq` distRand `seq`
     [ bench ("insert " ++ name) $
-      nf (insert :: [full] -> container) ss
+      whnf (insert :: [full] -> container) ss
     , bench ("insert rand " ++ name) $
-      nf (insert :: [full] -> container) rand1ss
+      whnf (insert :: [full] -> container) rand1ss
     , bench ("lookup " ++ name) $
-      nf (query 0 rand2ss :: container -> ()) dist
+      whnf (query 0 rand2ss :: container -> ()) dist
     , bench ("lookup rand " ++ name) $
-      nf (query 0 rand2ss :: container -> ()) distRand
+      whnf (query 0 rand2ss :: container -> ()) distRand
     , bench ("query 1 " ++ name) $
-      nf (query 1 (take 100 rand2ss) :: container -> ()) dist
+      whnf (query 1 (take 100 rand2ss) :: container -> ()) dist
     , bench ("query 1 rand " ++ name) $
-      nf (query 1 (take 100 rand2ss) :: container -> ()) distRand
+      whnf (query 1 (take 100 rand2ss) :: container -> ()) distRand
     , bench ("query 2 " ++ name) $
-      nf (query 2 (take 100 rand2ss) :: container -> ()) dist
+      whnf (query 2 (take 100 rand2ss) :: container -> ()) dist
     , bench ("query 2 rand " ++ name) $
-      nf (query 2 (take 100 rand2ss) :: container -> ()) distRand
+      whnf (query 2 (take 100 rand2ss) :: container -> ()) distRand
     ]
   where
     dist     = Dist.fromList ss
@@ -64,11 +63,7 @@ group1 _ ss rand1ss rand2ss name =
 -- yuk
 group2
     :: forall container full sym algo.
-       ( NFData (container String Char Levenshtein)
-       , NFData (container ByteString Word8 Levenshtein)
-       , NFData (container String Char DamerauLevenshtein)
-       , NFData (container ByteString Word8 DamerauLevenshtein)
-       , Search (container String Char Levenshtein) String Levenshtein
+       ( Search (container String Char Levenshtein) String Levenshtein
        , Search (container ByteString Word8 Levenshtein) ByteString Levenshtein
        , Search (container String Char DamerauLevenshtein) String DamerauLevenshtein
        , Search (container ByteString Word8 DamerauLevenshtein) ByteString DamerauLevenshtein

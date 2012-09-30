@@ -1,3 +1,4 @@
+{-# LANGUAGE EmptyDataDecls #-}
 module Language.Phonetic.Soundex where
 
 import           Data.Char (toUpper)

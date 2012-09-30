@@ -24,17 +24,10 @@ Library
                       ListLike,
                       vector >= 0.5,
                       containers,
-                      deepseq,
                       bytestring,
                       array
 
     GHC-Options:      -Werror -O2
-
-    Extensions:       MultiParamTypeClasses,
-                      FlexibleInstances,
-                      ForeignFunctionInterface,
-                      ScopedTypeVariables,
-                      EmptyDataDecls
 
     Exposed-Modules:  Language.Distance,
                       Language.Distance.Internal,
@@ -56,4 +49,5 @@ Test-Suite benchmarks
     build-depends:    base,
                       criterion,
                       random-shuffle,
-                      bytestring >= 0.10  
+                      bytestring,
+                      time

@@ -13,7 +13,6 @@ module Language.Distance.Search.TST
 import           Control.Arrow (first)
 import           Data.Word (Word8)
 
-import           Control.DeepSeq
 import           Data.ByteString (ByteString)
 
 import           Data.ListLike (ListLike)
@@ -54,13 +53,10 @@ insertions (c : s) = (WildCard : c : s) : map (c :) (insertions s)
 
 newtype TSTDist full sym algo = TSTDist {getTST :: TSTSet sym}
 
-instance NFData sym => NFData (TSTDist full sym algo) where
-    rnf = rnf . getTST
-
 changeAlgo :: TSTDist full sym algo1 -> TSTDist full sym algo1
 changeAlgo (TSTDist tst) = TSTDist tst
 
-instance (Ord sym, ListLike full sym, EditDistance Levenshtein sym)
+instance (Ord sym, ListLike full sym, EditDistance sym Levenshtein)
          => Search (TSTDist full sym Levenshtein) full Levenshtein where
     empty     = TSTDist TSTSet.empty
     insert ll = TSTDist . TSTSet.insert (ListLike.toList ll) . getTST
@@ -75,7 +71,7 @@ instance (Ord sym, ListLike full sym, EditDistance Levenshtein sym)
                          -> [(ByteString, Distance Levenshtein)] #-}
 
 
-instance (Ord sym, ListLike full sym, EditDistance DamerauLevenshtein sym)
+instance (Ord sym, ListLike full sym, EditDistance sym DamerauLevenshtein)
          => Search (TSTDist full sym DamerauLevenshtein) full DamerauLevenshtein where
     empty     = TSTDist TSTSet.empty
     insert ll = TSTDist . TSTSet.insert (ListLike.toList ll) . getTST

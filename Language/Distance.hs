@@ -16,7 +16,7 @@ import           Data.Monoid ((<>))
 import           Prelude hiding ((!!))
 
 import           Data.ByteString (ByteString)
-import qualified Data.Map.Lazy as Map
+import qualified Data.Map as Map
 import           Data.ListLike (ListLike)
 import qualified Data.ListLike as ListLike
 import           Data.Vector.Unboxed.Mutable (STVector, Unbox)
@@ -25,7 +25,7 @@ import qualified Data.Vector.Unboxed.Mutable as Vector
 import           Language.Distance.Internal
 
 
-class EditDistance algo sym where
+class EditDistance sym algo where
     distance :: ListLike full sym => full -> full -> Distance algo
 
 -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --
@@ -34,7 +34,7 @@ class EditDistance algo sym where
 
 data Levenshtein
 
-instance Eq sym => EditDistance Levenshtein sym where
+instance Eq sym => EditDistance sym Levenshtein where
     distance s1 s2 = runST $ do v <- Vector.replicate ((len1 + 1) * (len2 + 1)) 0
                                 mapM_ (\r -> Vector.write v (ix r 0) r) [0..len1]
                                 mapM_ (\c -> Vector.write v (ix 0 c) c) [0..len2]
@@ -58,7 +58,7 @@ instance Eq sym => EditDistance Levenshtein sym where
 
 data DamerauLevenshtein
 
-instance (Eq sym, Ord sym) => EditDistance DamerauLevenshtein sym where
+instance (Eq sym, Ord sym) => EditDistance sym DamerauLevenshtein where
     distance s1 s2
         | ListLike.null s1 = Distance (ListLike.length s2)
         | ListLike.null s2 = Distance (ListLike.length s1)

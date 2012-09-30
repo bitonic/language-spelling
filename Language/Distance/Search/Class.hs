@@ -5,6 +5,8 @@ module Language.Distance.Search.Class (Search (..)) where
 import           Language.Distance
 
 
+-- It would be nice to have the ListLike and EditDistance constraints on the
+-- class, but I can't, see <http://hackage.haskell.org/trac/ghc/ticket/7100>.
 class Search container full algo | container -> full, container -> algo where
     empty  :: container
     insert :: full -> container -> container
@@ -18,23 +20,3 @@ class Search container full algo | container -> full, container -> algo where
 
     fromList :: [full] -> container
     fromList = foldr insert empty
-
--- class Search container sym algo where
---     empty  :: (EditDistance algo sym, ListLike full sym) => container full sym algo
---     insert :: (EditDistance algo sym, ListLike full sym)
---            => full -> container full sym algo -> container full sym falgo
---     query  :: (EditDistance algo sym, ListLike full sym)
---            => Int -> full -> container full sym algo -> [(full, Distance algo)]
-
---     singleton :: (EditDistance algo sym, ListLike full sym)
---               => full -> container full sym algo
---     singleton str = insert str empty
-
---     member :: (EditDistance algo sym, ListLike full sym)
---            => full -> container full sym algo -> Bool
---     member x = not . null . query 0 x
-
---     fromList :: (EditDistance algo sym, ListLike full sym)
---              => [full] -> container full sym algo
---     fromList = foldr insert empty
-
