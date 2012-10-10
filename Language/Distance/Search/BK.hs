@@ -3,14 +3,13 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 module Language.Distance.Search.BK
-    -- ( BKTree
-    -- , empty
-    -- , insert
-    -- , query
-    -- , levenshtein
-    -- , damerauLevenshtein
-    -- )
-    where
+    ( BKTree
+    , empty
+    , insert
+    , query
+    , levenshtein
+    , damerauLevenshtein
+    ) where
 
 import           Data.IntMap (IntMap)
 import qualified Data.IntMap as IntMap
