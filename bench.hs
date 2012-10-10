@@ -1,102 +1,107 @@
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE CPP #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 import Control.Applicative ((<$>))
 
 import           Data.Char (toLower)
 import           Data.Monoid (Last (..))
-import           Data.Word (Word8)
 
-import           Data.ByteString.Char8 (ByteString)
-import qualified Data.ByteString.Char8 as BS
+import           Control.DeepSeq (NFData)
+import qualified Data.ByteString.Char8 as ByteString
+import qualified Data.Text as Text
+import qualified Data.Text.IO as Text
 import           Data.Time.Clock.POSIX (getPOSIXTime)
 
-import           Criterion.Main
 import           Criterion.Config
+import           Criterion.Main
+import           Data.ListLike.Text ()
 import           System.Random.Shuffle
 
-import           Language.Distance
-import           Language.Distance.Search (Search, BKTree, TSTDist)
-import qualified Language.Distance.Search as Dist
+import           Language.Distance.Internal (Distance (..))
+import qualified Language.Distance.Search.BK as BK
+import qualified Language.Distance.Search.TST as TST
 
-everyN :: Int -> [a] -> [a]
+
+-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --
+-- ~~ Utils and dictionaries ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --
+-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --
+
 everyN n xs = case drop n xs of
                   []        -> []
                   (x : xs') -> x : everyN n xs'
 
-dict :: IO [String]
-dict = (map (map toLower)) . everyN 20 . lines <$> readFile "/usr/share/dict/words"
+-- We get every 20 words since testing with the whole dict is too much
+dict m lin read_ = (map (m toLower)) . everyN 20 . lin <$> read_ "/usr/share/dict/words"
 
-dictBS :: IO [ByteString]
-dictBS = (map (BS.map toLower)) . everyN 20 . BS.lines <$> BS.readFile "/usr/share/dict/words"
+dictS = dict map lines readFile
 
-insert :: Search container full algo => [full] -> container
-insert ss = foldr Dist.insert Dist.empty ss
+dictBS = dict ByteString.map ByteString.lines ByteString.readFile
 
-query :: (Search container full algo) => Int -> [full] -> container -> ()
-query n ss dist = length [() | s <- ss, length (Dist.query n s dist) > 0] `seq` ()
+dictT = dict Text.map Text.lines Text.readFile
 
-group1 :: forall container full algo. (Search container full algo)
-       => container -> [full] -> [full] -> [full] -> String -> [Benchmark]
-group1 _ ss rand1ss rand2ss name =
+-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --
+-- ~~ Search ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --
+-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --
+
+deriving instance NFData (Distance algo)
+
+query queryc n ss dist = map (\s -> queryc n s dist) ss
+
+group1 emptyc insertc queryc ss rand1ss rand2ss name =
     dist `seq` distRand `seq`
-    [ bench ("insert " ++ name) $
-      whnf (insert :: [full] -> container) ss
-    , bench ("insert rand " ++ name) $
-      whnf (insert :: [full] -> container) rand1ss
-    , bench ("lookup " ++ name) $
-      whnf (query 0 rand2ss :: container -> ()) dist
-    , bench ("lookup rand " ++ name) $
-      whnf (query 0 rand2ss :: container -> ()) distRand
-    , bench ("query 1 " ++ name) $
-      whnf (query 1 (take 100 rand2ss) :: container -> ()) dist
-    , bench ("query 1 rand " ++ name) $
-      whnf (query 1 (take 100 rand2ss) :: container -> ()) distRand
-    , bench ("query 2 " ++ name) $
-      whnf (query 2 (take 100 rand2ss) :: container -> ()) dist
-    , bench ("query 2 rand " ++ name) $
-      whnf (query 2 (take 100 rand2ss) :: container -> ()) distRand
+    [ bench ("insert " ++ name) $ whnf (foldr insertc emptyc) ss
+    , bench ("insert rand " ++ name) $ whnf (foldr insertc emptyc) rand1ss
+    , bench ("lookup " ++ name) $ nf (query queryc 0 rand2ss) dist
+    , bench ("lookup rand " ++ name) $ nf (query queryc 0 rand2ss) distRand
+    , bench ("query 1 " ++ name) $ nf (query queryc 1 (take 100 rand2ss)) dist
+    , bench ("query 1 rand " ++ name) $ nf (query queryc 1 (take 100 rand2ss)) distRand
+    , bench ("query 2 " ++ name) $ nf (query queryc 2 (take 100 rand2ss)) dist
+    , bench ("query 2 rand " ++ name) $ nf (query queryc 2 (take 100 rand2ss)) distRand
     ]
   where
-    dist     = Dist.fromList ss
-    distRand = Dist.fromList rand1ss
+    dist     = foldr insertc emptyc ss
+    distRand = foldr insertc emptyc rand1ss
 
--- yuk
-group2
-    :: forall container full sym algo.
-       ( Search (container String Char Levenshtein) String Levenshtein
-       , Search (container ByteString Word8 Levenshtein) ByteString Levenshtein
-       , Search (container String Char DamerauLevenshtein) String DamerauLevenshtein
-       , Search (container ByteString Word8 DamerauLevenshtein) ByteString DamerauLevenshtein
-       ) => container full sym algo -> [String] -> [String] -> [String]
-         -> [ByteString] -> [ByteString] -> [ByteString]
-         -> String -> [Benchmark]
-group2 _ ss rand1ss rand2ss bss rand1bss rand2bss name =
-    [ bgroup (name ++ " string") $
-      (group1 (undefined :: container String Char Levenshtein)
-              ss rand1ss rand2ss "lev") ++
-      (group1 (undefined :: container String Char DamerauLevenshtein)
-              ss rand1ss rand2ss "dam-lev")
-    , bgroup (name ++ " bytestring") $
-      (group1 (undefined :: container ByteString Word8 Levenshtein)
-              bss rand1bss rand2bss "lev") ++
-      (group1 (undefined :: container ByteString Word8 DamerauLevenshtein)
-              bss rand1bss rand2bss "dam-lev")
+#define group2(NAME, TYPE, SS, RAND1SS, RAND2SS, EMPTY, INSERT, LEVEN, DAMLEV) \
+    (bgroup (NAME ++ " " ++ TYPE) \
+     ((group1 EMPTY INSERT LEVEN SS RAND1SS RAND2SS "lev") ++ \
+      (group1 EMPTY INSERT LEVEN SS RAND1SS RAND2SS "dam-lev")))
+
+group3 ss rand1ss rand2ss =
+    [ -- group2("tst", "string", ss, rand1ss, rand2ss, TST.empty, TST.insert,
+    --          TST.levenshtein, TST.damerauLevenshtein)
+    -- , group2("tst", "bytestring", bss, rand1bss, rand2bss, TST.empty, TST.insert,
+    --          TST.levenshtein, TST.damerauLevenshtein)
+    -- , group2("tst", "text", ts, rand1ts, rand2ts, TST.empty, TST.insert, TST.levenshtein,
+    --          TST.damerauLevenshtein)
+    -- , 
+      group2("bk", "string", ss, rand1ss, rand2ss, BK.empty, BK.insert, BK.levenshtein,
+             BK.damerauLevenshtein)
+    -- , group2("bk", "bytestring", bss, rand1bss, rand2bss, BK.empty, BK.insert,
+    --          BK.levenshtein, BK.damerauLevenshtein)
+    -- , group2("bk", "text", ts, rand1ts, rand2ts, BK.empty, BK.insert, BK.levenshtein,
+    --          BK.damerauLevenshtein)
     ]
+  where
+    bss      = map ByteString.pack ss
+    rand1bss = map ByteString.pack rand1ss
+    rand2bss = map ByteString.pack rand2ss
+    ts       = map Text.pack ss
+    rand1ts  = map Text.pack rand1ss
+    rand2ts  = map Text.pack rand2ss
 
-main :: IO ()
-main = do ss       <- dict
+-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --
+-- ~~ Distance ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --
+-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --
+
+main = do ss       <- dictS
           rand1ss  <- shuffleM ss
           rand2ss  <- shuffleM ss
-          bss      <- dictBS
-          rand1bss <- shuffleM bss
-          rand2bss <- shuffleM bss
           fn       <- (++ ".html") . (show :: Integer -> String) . ceiling <$>
                       getPOSIXTime
           let config = defaultConfig { cfgReport  = (Last (Just fn))
                                      , cfgSamples = (Last (Just 100))
                                      }
-          defaultMainWith config (return ())
-                          (group2 (undefined :: TSTDist full sym algo)
-                                  ss rand1ss rand2ss bss rand1bss rand2bss "tst" ++
-                           group2 (undefined :: BKTree full sym algo)
-                                  ss rand1ss rand2ss bss rand1bss rand2bss "bk")
+          defaultMainWith config (return ()) (group3 ss rand1ss rand2ss)

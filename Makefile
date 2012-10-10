@@ -1,4 +1,6 @@
-bench:
+SOURCES=$(find . -name *.hs)
+
+bench: $(SOURCES)
 	ghc -O2 bench.hs
 
 run-bench: bench

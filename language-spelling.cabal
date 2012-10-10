@@ -25,15 +25,17 @@ Library
                       vector >= 0.5,
                       containers,
                       bytestring,
-                      array
+                      array,
+                      text,
+                      listlike-instances
 
     GHC-Options:      -Werror -O2
 
     Exposed-Modules:  Language.Distance,
                       Language.Distance.Internal,
-                      Language.Distance.Search,
                       Language.Distance.Search.BK,
                       Language.Distance.Search.TST,
+                      Language.Distance.Search.Generic,
                       Language.Phonetic,
                       Language.Phonetic.Encoder,
                       Language.Phonetic.Soundex,
@@ -41,12 +43,14 @@ Library
                       Data.TST,
                       Data.TSTSet
 
-    Other-Modules:    Language.Distance.Search.Class
-
 Test-Suite benchmarks
-    type:             exitcode-stdio-1.0
-    main-is:          bench.hs
-    build-depends:    base,
+    Type:             exitcode-stdio-1.0
+
+    Main-Is:          bench.hs
+
+    GHC-Options:      -O2 -Werror
+
+    Build-Depends:    base,
                       criterion,
                       random-shuffle,
                       bytestring,

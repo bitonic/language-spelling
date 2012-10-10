@@ -2,8 +2,10 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 module Language.Distance.Search.TST
-    ( TSTDist
-    , changeAlgo
+    ( levenshtein
+    , damerauLevenshtein
+    , TSTSet.empty
+    , insert
     , deletions
     , transpositions
     , replaces
@@ -22,10 +24,8 @@ import           Data.TST (WildCard (..), WildList)
 import qualified Data.TST as TST
 import           Data.TSTSet (TSTSet)
 import qualified Data.TSTSet as TSTSet
-import           Language.Distance
+import           Language.Distance (Levenshtein, DamerauLevenshtein)
 import           Language.Distance.Internal
-import           Language.Distance.Search.Class (Search)
-import qualified Language.Distance.Search.Class as Class
 
 -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --
 -- ~~ Edits ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --
@@ -48,48 +48,27 @@ insertions [] = [[WildCard]]
 insertions (c : s) = (WildCard : c : s) : map (c :) (insertions s)
 
 -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --
--- ~~ TST Search ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --
+-- ~~ Search ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --
 -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --
 
-newtype TSTDist full sym algo = TSTDist {getTST :: TSTSet sym}
+levenshtein :: (Ord sym, ListLike full sym) => Int -> full -> TSTSet sym
+            -> [(full, Distance Levenshtein)]
+levenshtein = queryTST (\s -> deletions s ++ replaces s ++ insertions s)
 
-changeAlgo :: TSTDist full sym algo1 -> TSTDist full sym algo1
-changeAlgo (TSTDist tst) = TSTDist tst
+damerauLevenshtein :: (Ord sym, ListLike full sym) => Int -> full -> TSTSet sym
+                   -> [(full, Distance DamerauLevenshtein)]
+damerauLevenshtein =
+    queryTST (\s -> deletions s ++ replaces s ++ insertions s ++ transpositions s)
 
-instance (Ord sym, ListLike full sym, EditDistance sym Levenshtein)
-         => Search (TSTDist full sym Levenshtein) full Levenshtein where
-    empty     = TSTDist TSTSet.empty
-    insert ll = TSTDist . TSTSet.insert (ListLike.toList ll) . getTST
-    {-# SPECIALISE insert :: String -> TSTDist String Char Levenshtein
-                          -> TSTDist String Char Levenshtein #-}
-    {-# SPECIALISE insert :: ByteString -> TSTDist ByteString Word8 Levenshtein
-                          -> TSTDist ByteString Word8 Levenshtein #-}
-    query     = queryTST (\s -> deletions s ++ replaces s ++ insertions s)
-    {-# SPECIALISE query :: Int -> String -> TSTDist String Char Levenshtein
-                         -> [(String, Distance Levenshtein)] #-}
-    {-# SPECIALISE query :: Int -> ByteString -> TSTDist ByteString Word8 Levenshtein
-                         -> [(ByteString, Distance Levenshtein)] #-}
-
-
-instance (Ord sym, ListLike full sym, EditDistance sym DamerauLevenshtein)
-         => Search (TSTDist full sym DamerauLevenshtein) full DamerauLevenshtein where
-    empty     = TSTDist TSTSet.empty
-    insert ll = TSTDist . TSTSet.insert (ListLike.toList ll) . getTST
-    {-# SPECIALISE insert :: String -> TSTDist String Char DamerauLevenshtein
-                          -> TSTDist String Char DamerauLevenshtein #-}
-    {-# SPECIALISE insert :: ByteString -> TSTDist ByteString Word8 DamerauLevenshtein
-                          -> TSTDist ByteString Word8 DamerauLevenshtein #-}
-    query     = queryTST (\s -> deletions s ++ replaces s ++ insertions s ++
-                                transpositions s)
-    {-# SPECIALISE query :: Int -> String -> TSTDist String Char DamerauLevenshtein
-                         -> [(String, Distance DamerauLevenshtein)] #-}
-    {-# SPECIALISE query :: Int -> ByteString -> TSTDist ByteString Word8 DamerauLevenshtein
-                         -> [(ByteString, Distance DamerauLevenshtein)] #-}
+insert :: (Ord sym, ListLike full sym) => full -> TSTSet sym -> TSTSet sym
+insert ll = TSTSet.insert (ListLike.toList ll)
+{-# SPECIALISE insert :: String -> TSTSet Char -> TSTSet Char #-}
+{-# SPECIALISE insert :: ByteString -> TSTSet Word8 -> TSTSet Word8 #-}
 
 queryTST :: (Ord sym, ListLike full sym)
          => (WildList sym -> [WildList sym])
-         -> Int -> full -> TSTDist full sym algo -> [(full, Distance algo)]
-queryTST f maxd s (TSTDist tst) =
+         -> Int -> full -> TSTSet sym -> [(full, Distance algo)]
+queryTST f maxd s tst =
     map (first ListLike.fromList) $ TST.toList $
     go 0 TSTSet.empty [wildList $ ListLike.toList s] TST.empty
   where
@@ -103,17 +82,11 @@ queryTST f maxd s (TSTDist tst) =
 
     update new matches = foldr (uncurry (TST.insertWith (flip const))) matches new
 {-# SPECIALISE queryTST :: (WildList Char -> [WildList Char])
-                        -> Int -> String -> TSTDist String Char Levenshtein
-                        -> [(String, Distance Levenshtein)] #-}
-{-# SPECIALISE queryTST :: (WildList Char -> [WildList Char])
-                        -> Int -> String -> TSTDist String Char DamerauLevenshtein
-                        -> [(String, Distance DamerauLevenshtein)] #-}
+                        -> Int -> String -> TSTSet Char
+                        -> [(String, Distance algo)] #-}
 {-# SPECIALISE queryTST :: (WildList Word8 -> [WildList Word8])
-                        -> Int -> ByteString -> TSTDist ByteString Word8 Levenshtein
-                        -> [(ByteString, Distance Levenshtein)] #-}
-{-# SPECIALISE queryTST :: (WildList Word8 -> [WildList Word8])
-                        -> Int -> ByteString -> TSTDist ByteString Word8 DamerauLevenshtein
-                        -> [(ByteString, Distance DamerauLevenshtein)] #-}
+                        -> Int -> ByteString -> TSTSet Word8
+                        -> [(ByteString, Distance algo)] #-}
 
 wildList :: ListLike full sym => full -> WildList sym
 wildList = map El . ListLike.toList

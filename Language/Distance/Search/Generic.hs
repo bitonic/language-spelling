@@ -2,7 +2,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-module Language.Distance.Search.Generic where
+module Language.Distance.Search.Generic (Search (..)) where
 
 import           Data.ListLike (ListLike)
 import qualified Data.ListLike as ListLike
