@@ -41,11 +41,11 @@ query :: forall full sym algo. (ListLike full sym, EditDistance sym algo)
       => Int -> full -> BKTree full algo -> [(full, Distance algo)]
 query _    _    EmptyBK          = []
 query maxd str (BKTree str' bks) = match ++ concatMap (query maxd str) children
-  where dist = distance str str' :: Distance algo
-        intDist = getDistance dist
-        match | intDist <= maxd = [(str', dist)]
-              | otherwise       = []
-        children = IntMap.elems $ narrow (abs (intDist - maxd)) (intDist + maxd) bks
+  where
+    dist     = distance str str' :: Distance algo
+    intDist  = getDistance dist
+    match    = if (intDist <= maxd) then [(str', dist)] else []
+    children = IntMap.elems $ narrow (abs (intDist - maxd)) (intDist + maxd) bks
 
 levenshtein :: (ListLike full sym, EditDistance sym Levenshtein)
             => Int -> full -> BKTree full Levenshtein -> [(full, Distance Levenshtein)]
