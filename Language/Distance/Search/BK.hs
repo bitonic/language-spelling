@@ -1,5 +1,5 @@
-{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 module Language.Distance.Search.BK
@@ -19,11 +19,17 @@ import           Data.ListLike (ListLike)
 import           Language.Distance (EditDistance (..), Levenshtein, DamerauLevenshtein)
 import           Language.Distance.Internal
 
-data BKTree full algo = EmptyBK
-                      | BKTree !full !(IntMap (BKTree full algo))
+data BKTree full algo
+    = EmptyBK
+    | BKTree !full !(IntMap (BKTree full algo))
 
 narrow :: Int -> Int -> IntMap a -> IntMap a
-narrow n m im = fst (IntMap.split m (snd (IntMap.split n im)))
+narrow n m im | n == m    = IntMap.fromList (maybe [] (\v -> [(n, v)]) (IntMap.lookup n im))
+narrow n m im | otherwise = insMaybe m res pr
+  where
+    (_, pl, res0)  = IntMap.splitLookup n im
+    (res, pr, _)   = IntMap.splitLookup m (insMaybe n res0 pl)
+    insMaybe k im' = maybe im' (\v -> IntMap.insert k v im')
 
 empty :: BKTree full algo
 empty = EmptyBK
