@@ -1,12 +1,12 @@
-Cabal-version:      >= 1.6
+Cabal-Version:      >= 1.8
 Name:               language-spelling
-Version:            0.1
+Version:            0.1.2
 Author:             Francesco Mazzoli (f@mazzo.li)
 Maintainer:         Francesco Mazzoli (f@mazzo.li)
 Build-Type:         Simple
 License:            PublicDomain
 Build-Type:         Simple
-Category:           Foreign binding, Text
+Category:           NLP
 Synopsis:           Various tools to detect/correct mistakes in words
 Tested-With:        GHC==7.4.1
 Homepage:           https://github.com/bitonic/language-spelling
@@ -59,11 +59,12 @@ Library
                       Language.Distance.Search.BK,
                       Language.Distance.Search.TST,
                       Language.Phonetic,
-                      Language.Phonetic.Encoder,
-                      Language.Phonetic.Soundex,
                       Language.Phonetic.Internal,
                       Data.TST,
                       Data.TSTSet
+
+    Other-Modules:    Language.Phonetic.Soundex,
+                      Language.Phonetic.Encoder
 
 Test-Suite benchmarks
     Type:             exitcode-stdio-1.0

@@ -1,5 +1,5 @@
 {-# LANGUAGE EmptyDataDecls #-}
-module Language.Phonetic.Soundex where
+module Language.Phonetic.Soundex (Soundex) where
 
 import           Data.Char (toUpper)
 import           Data.Word (Word8)
@@ -27,6 +27,7 @@ table = Array.array ('A', 'Z')
           ('V', Right 1    ), ('W', Left  False), ('X', Right 2    ),
           ('Y', Left  True ), ('Z', Right 2    ) ]
 
+-- | See <https://en.wikipedia.org/wiki/Soundex> for more info.
 data Soundex
 
 instance Encoder Soundex where
