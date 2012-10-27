@@ -1,12 +1,21 @@
 {-# LANGUAGE EmptyDataDecls #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+-- | Generic interface to calculate the edit instance between two list-like
+--   things using various algorithms.
+--
+--   Right now, two algorithms are provided, 'Levenshtein' and
+--   'DamerauLevenshtein'.
 module Language.Distance
-    ( Distance
+    ( -- * Types
+      Distance
     , getDistance
     , EditDistance (..)
+      -- * Algorithms
+      -- ** Levenshtein
     , Levenshtein
     , levenshtein
+      -- ** Damerau-Levenshtein
     , DamerauLevenshtein
     , damerauLevenshtein
     ) where
@@ -29,6 +38,17 @@ import qualified Data.Vector.Unboxed.Mutable as Vector
 import           Language.Distance.Internal
 
 
+{-|
+Generic typeclass for edit distances.  Specify the type manually to use a
+specific algorithm, for instance
+
+@
+distance \"foo\" \"bar\" :: 'Distance' 'DamerauLevenshtein'
+@
+
+Monomorphic functions are also provided, see 'levenshtein' and
+'damerauLevenshtein'.
+-}
 class EditDistance sym algo where
     distance :: ListLike full sym => full -> full -> Distance algo
 
@@ -36,6 +56,10 @@ class EditDistance sym algo where
 -- ~~ Levenshtein ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --
 -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --
 
+-- | The classic Levenshtein distance, where adding, removing or changing a
+--   character are taken into account.
+--
+--   More information: <https://en.wikipedia.org/wiki/Levenshtein_distance>.
 data Levenshtein
 
 instance Eq sym => EditDistance sym Levenshtein where
@@ -64,6 +88,8 @@ levenshtein s1 s2 = runST $ do v <- Vector.replicate ((len1 + 1) * (len2 + 1)) 0
 -- ~~ Damerau-Levenshtein ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --
 -- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ --
 
+-- | Like 'Levenshtein', but transpositions are also taken into account:
+--   <https://en.wikipedia.org/wiki/Damerau-Levenshtein_distance>.
 data DamerauLevenshtein
 
 instance Ord sym => EditDistance sym DamerauLevenshtein where

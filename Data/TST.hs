@@ -1,5 +1,15 @@
+-- | Implementation of a Ternary Search Tree:
+--   <https://en.wikipedia.org/wiki/Ternary_search_tree>, which is a structure
+--   useful to store any list-like thing.  It is quite resistant to non-random
+--   data without needing rebalancing and can be as fast or faster than hash
+--   tables.
+--
+--   The usual finite map operations are provided, plus utilities to match
+--   wildcarded words efficiently.
 module Data.TST
-    ( TST
+    ( -- * Types
+      TST
+      -- * Operations
     , empty
     , singleton
     , insert
@@ -9,6 +19,7 @@ module Data.TST
     , toList
     , fromList
 
+      -- * Wildcards
     , WildCard (..)
     , WildList
     , matchWL

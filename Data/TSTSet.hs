@@ -1,5 +1,8 @@
+-- | A wrapper for @TST sym ()@.
 module Data.TSTSet
-    ( TSTSet
+    ( -- * Types
+      TSTSet
+      -- * Operations
     , empty
     , singleton
     , insert
@@ -7,6 +10,10 @@ module Data.TSTSet
     , delete
     , toList
     , fromList
+
+      -- * Wildcards
+    , TST.WildCard (..)
+    , TST.WildList
     , matchWL
     ) where
 

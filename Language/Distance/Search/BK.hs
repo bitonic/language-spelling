@@ -2,8 +2,19 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+-- | An implementation of 'Language.Distance.Search' based on a BK-tree:
+--   <https://en.wikipedia.org/wiki/Bk-tree>.  It performs reasonably, and it
+--   scales decently as the query distance increases.  Moreover the data
+--   structure can work on any instance of 'EditDistance', or in fact any metric
+--   space (although no interface for that purpose is defined):
+--   <https://en.wikipedia.org/wiki/Metric_space>.
+--
+--   However, for very short distances (less than 3),
+--   'Language.Distance.Search.TST' is faster.
 module Language.Distance.Search.BK
-    ( BKTree
+    ( -- * Data type
+      BKTree
+      -- * Operations
     , empty
     , insert
     , query
