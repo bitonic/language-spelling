@@ -21,12 +21,20 @@ Description:
     ghci> :m + Language.Distance.Search.BK
     ghci> distance \"foo\" \"bar\" :: Distance DamerauLevenshtein 
     3
-    ghci> let bk = foldr insert empty [\"foo\", \"foa\", \"fooa\", \"ofo\", \"arstu\", \"nana\", \"faa\"] :: BKTree String DamerauLevenshtein
+    ghci> let bk = foldr insert empty [\"foo\", \"foa\", \"fooa\", \"ofo\", \"arstu\", \"nana\", \"faa\"] :: BKTree String 'DamerauLevenshtein'
     ghci> query 0 \"foo\" bk
     [(\"foo\",Distance 0)]
     ghci> query 2 \"foo\" bk
     [(\"faa\",Distance 2),(\"foa\",Distance 1),(\"fooa\",Distance 1),(\"foo\",Distance 0),(\"ofo\",Distance 1)]
     @
+    .
+    TODO:
+    .
+    *   Phonetic algorithms: metaphone, double metaphone, maybe others
+    .
+    *   Tests and better benchmarking
+    .
+    *   Cost tuning when searching
 
 source-repository head
     type:     git
