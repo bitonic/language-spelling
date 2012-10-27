@@ -15,7 +15,7 @@ Description:
     Haskell library meant to be a set of tools to correct spelling mistakes,
     homophones, and OCR errors.
     .
-    Sample session
+    Sample session:
     .
     @
     ghci> :m + Language.Distance.Search.BK
@@ -23,7 +23,9 @@ Description:
     3
     ghci> let bk = foldr insert empty [\"foo\", \"foa\", \"fooa\", \"ofo\", \"arstu\", \"nana\", \"faa\"] :: BKTree String DamerauLevenshtein
     ghci> query 0 \"foo\" bk
+    [(\"foo\",Distance 0)]
     ghci> query 2 \"foo\" bk
+    [(\"faa\",Distance 2),(\"foa\",Distance 1),(\"fooa\",Distance 1),(\"foo\",Distance 0),(\"ofo\",Distance 1)]
     @
 
 source-repository head

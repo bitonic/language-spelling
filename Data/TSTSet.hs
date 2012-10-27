@@ -1,4 +1,4 @@
--- | A wrapper for @TST sym ()@.
+-- | A wrapper for @'TST' sym ()@.
 module Data.TSTSet
     ( -- * Types
       TSTSet
