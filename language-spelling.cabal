@@ -1,6 +1,6 @@
 Cabal-version:      >= 1.6
 Name:               language-spelling
-Version:            0.0
+Version:            0.1
 Author:             Francesco Mazzoli (f@mazzo.li)
 Maintainer:         Francesco Mazzoli (f@mazzo.li)
 Build-Type:         Simple
