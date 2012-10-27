@@ -62,7 +62,7 @@ query maxd str (BKTree str' bks) = match ++ concatMap (query maxd str) children
     dist     = distance str str' :: Distance algo
     intDist  = getDistance dist
     match    = if (intDist <= maxd) then [(str', dist)] else []
-    children = IntMap.elems $ narrow (abs (intDist - maxd)) (intDist + maxd) bks
+    children = IntMap.elems $ narrow (max (intDist - maxd) 0) (intDist + maxd) bks
 
 levenshtein :: (ListLike full sym, EditDistance sym Levenshtein)
             => Int -> full -> BKTree full Levenshtein -> [(full, Distance Levenshtein)]

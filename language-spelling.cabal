@@ -18,13 +18,12 @@ Description:
     Sample session
     .
     @
-    ghci> :m + Language.Distance.Search.BK.hs
-    ghci> distance "foo" "bar" :: Distance DamerauLevenshtein 
-    ghci> let bk = foldr insert empty ["foo", "foa", "fooa", "ofo", "arstu", "nana", "faa"] :: BKTree String DamerauLevenshtein 
-    ghci> query 0 "foo" bk
-    [("foo",Distance {getDistance = 0})]
-    ghci> query 2 "foo" bk
-[("faa",Distance {getDistance = 2}),("foa",Distance {getDistance = 1}),("fooa",Distance {getDistance = 1}),("foo",Distance {getDistance = 0}),("ofo",Distance {getDistance = 1})]
+    ghci> :m + Language.Distance.Search.BK
+    ghci> distance \"foo\" \"bar\" :: Distance DamerauLevenshtein 
+    3
+    ghci> let bk = foldr insert empty [\"foo\", \"foa\", \"fooa\", \"ofo\", \"arstu\", \"nana\", \"faa\"] :: BKTree String DamerauLevenshtein
+    ghci> query 0 \"foo\" bk
+    ghci> query 2 \"foo\" bk
     @
 
 source-repository head
