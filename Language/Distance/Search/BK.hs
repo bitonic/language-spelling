@@ -6,8 +6,7 @@
 --   <https://en.wikipedia.org/wiki/Bk-tree>.  It performs reasonably, and it
 --   scales decently as the query distance increases.  Moreover the data
 --   structure can work on any instance of 'EditDistance', or in fact any metric
---   space (although no interface for that purpose is defined):
---   <https://en.wikipedia.org/wiki/Metric_space>.
+--   space - a generic interface is provided in 'Data.BKTree'.
 --
 --   However, for very short distances (less than 3),
 --   'Language.Distance.Search.TST' is faster.
@@ -22,47 +21,27 @@ module Language.Distance.Search.BK
     , damerauLevenshtein
     ) where
 
-import           Data.IntMap (IntMap)
-import qualified Data.IntMap as IntMap
+import           Control.Arrow (second)
 
 import           Data.ListLike (ListLike)
 
+import qualified Data.BKTree as BKTree
 import           Language.Distance (EditDistance (..), Levenshtein, DamerauLevenshtein)
 import           Language.Distance.Internal
 
-data BKTree full algo
-    = EmptyBK
-    | BKTree !full !(IntMap (BKTree full algo))
+newtype BKTree full algo = BKTree (BKTree.BKTree full)
 
-narrow :: Int -> Int -> IntMap a -> IntMap a
-narrow n m im | n == m    = IntMap.fromList (maybe [] (\v -> [(n, v)]) (IntMap.lookup n im))
-narrow n m im | otherwise = insMaybe m res pr
-  where
-    (_, pl, res0)  = IntMap.splitLookup n im
-    (res, pr, _)   = IntMap.splitLookup m (insMaybe n res0 pl)
-    insMaybe k im' = maybe im' (\v -> IntMap.insert k v im')
+empty :: forall full sym algo. (EditDistance sym algo, ListLike full sym)
+      => BKTree full algo
+empty = BKTree (BKTree.empty (\s s' -> getDistance (distance s s' :: Distance algo)))
 
-empty :: BKTree full algo
-empty = EmptyBK
-
-insert :: forall full sym algo. (Eq sym, EditDistance sym algo, ListLike full sym)
+insert :: (EditDistance sym algo, ListLike full sym)
        => full -> BKTree full algo -> BKTree full algo
-insert str EmptyBK = BKTree str IntMap.empty
-insert str bk@(BKTree str' bks)
-    | dist == 0 = bk
-    | otherwise = BKTree str' $ flip (IntMap.insert dist) bks $
-                  maybe (insert str EmptyBK) (insert str) (IntMap.lookup dist bks)
-  where dist = getDistance (distance str str' :: Distance algo)
+insert s (BKTree bk) = BKTree (BKTree.insert s bk)
 
-query :: forall full sym algo. (ListLike full sym, EditDistance sym algo)
+query :: (ListLike full sym, EditDistance sym algo)
       => Int -> full -> BKTree full algo -> [(full, Distance algo)]
-query _    _    EmptyBK          = []
-query maxd str (BKTree str' bks) = match ++ concatMap (query maxd str) children
-  where
-    dist     = distance str str' :: Distance algo
-    intDist  = getDistance dist
-    match    = if (intDist <= maxd) then [(str', dist)] else []
-    children = IntMap.elems $ narrow (max (intDist - maxd) 0) (intDist + maxd) bks
+query maxd s (BKTree bk) = map (second Distance) $ BKTree.query maxd s bk
 
 levenshtein :: (ListLike full sym, EditDistance sym Levenshtein)
             => Int -> full -> BKTree full Levenshtein -> [(full, Distance Levenshtein)]
