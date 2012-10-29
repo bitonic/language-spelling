@@ -61,10 +61,7 @@ Library
                       Language.Distance.Search.BK,
                       Language.Distance.Search.TST,
                       Language.Phonetic,
-                      Language.Phonetic.Internal,
-                      Data.BKTree,
-                      Data.TST,
-                      Data.TSTSet
+                      Language.Phonetic.Internal
 
     Other-Modules:    Language.Distance.Search.Class,
                       Language.Phonetic.Soundex,
