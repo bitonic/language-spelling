@@ -48,7 +48,10 @@ Library
                       ListLike,
                       listlike-instances,
                       text,
-                      vector >= 0.5
+                      vector >= 0.5,
+
+                      bk-tree,
+                      tst
 
     GHC-Options:      -Werror -O2
 
