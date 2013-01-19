@@ -2,8 +2,6 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 module Language.Distance.Search.Class (Search (..)) where
 
-import           Data.ListLike (ListLike)
-
 import           Language.Distance
 
 -- | Generic class for data structures that can perform queries retrieving words
