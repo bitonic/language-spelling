@@ -6,7 +6,7 @@ Maintainer:         Francesco Mazzoli (f@mazzo.li)
 Build-Type:         Simple
 License:            PublicDomain
 Build-Type:         Simple
-Category:           NLP
+Category:           Natural Language Processing
 Synopsis:           Various tools to detect/correct mistakes in words
 Tested-With:        GHC==7.4.1
 Homepage:           https://github.com/bitonic/language-spelling
